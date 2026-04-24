@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Contact Us — Adeyemi & Partners</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Cormorant Garamond','Georgia','serif'],
+            body:    ['DM Sans','sans-serif'],
+          },
+          colors: {
+            cream:     '#F5F0E8',
+            parchment: '#EDE8DC',
+            forest:    '#1C3B2E',
+            gold:      '#B8965A',
+            ink:       '#1A1A18',
+            muted:     '#6B6A64',
+          },
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Must come before Alpine loads */
+    [x-cloak] { display: none !important; }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background-color: #F5F0E8; color: #1A1A18; }
+
+    /* ── Fields ── */
+    .field {
+      width: 100%; background: transparent; border: none;
+      border-bottom: 1.5px solid #C8C3B4;
+      padding: 10px 0 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.875rem; color: #1A1A18;
+      outline: none; transition: border-color 0.25s; border-radius: 0; -webkit-appearance: none;
+    }
+    .field::placeholder { color: #A8A49A; font-weight: 300; }
+    .field:focus        { border-bottom-color: #1C3B2E; }
+    .field.error        { border-bottom-color: #B84040; }
+    .field:-webkit-autofill {
+      -webkit-box-shadow: 0 0 0 1000px #F5F0E8 inset;
+      -webkit-text-fill-color: #1A1A18;
+    }
+    textarea.field { resize: none; padding-top: 10px; }
+
+    .field-label {
+      display: block; font-size: 0.7rem; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #6B6A64; font-weight: 500; margin-bottom: 2px;
+    }
+    .err-msg { font-size: 0.72rem; color: #B84040; margin-top: 4px; font-weight: 300; }
+
+    /* ── Custom select ──
+       KEY FIX: The field-group wrapper gets position:relative + a high z-index
+       when the dropdown is open, so it layers above the fields below it.       */
+    .field-group {
+      position: relative;   /* establishes stacking context */
+      z-index: 1;           /* default */
+      margin-bottom: 24px;
+    }
+    .field-group.is-open {
+      z-index: 50;          /* raised when dropdown is open — sits above everything below */
+    }
+
+    .cs-trigger {
+      width: 100%; background: transparent; border: none;
+      border-bottom: 1.5px solid #C8C3B4;
+      padding: 10px 22px 8px 0;
+      font-family: 'DM Sans', sans-serif; font-size: 0.875rem; color: #1A1A18;
+      cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+      transition: border-color 0.25s; border-radius: 0; user-select: none;
+    }
+    .cs-trigger.empty  { color: #A8A49A; font-weight: 300; }
+    .cs-trigger:focus,
+    .cs-trigger.open   { border-bottom-color: #1C3B2E; outline: none; }
+    .cs-trigger.error  { border-bottom-color: #B84040; }
+
+    .cs-anchor { position: relative; } /* dropdown is relative to this */
+
+    .cs-dropdown {
+      position: absolute;
+      top: calc(100% + 2px); left: 0; right: 0;
+      background: #FDFAF4;
+      border: 1px solid #D8D3C4;
+      /* z-index here only needs to be above siblings inside .field-group */
+      z-index: 10;
+      max-height: 210px; overflow-y: auto;
+    }
+    .cs-option {
+      padding: 10px 14px; font-size: 0.875rem; cursor: pointer;
+      transition: background 0.12s; color: #1A1A18;
+    }
+    .cs-option:hover    { background: #EDE8DC; }
+    .cs-option.selected { color: #1C3B2E; font-weight: 500; }
+
+    /* ── Phone country code select ── */
+    .cc-wrap { position: relative; flex-shrink: 0; }
+    .cc-trigger {
+      display: flex; align-items: center; gap: 6px;
+      padding: 10px 20px 8px 0;
+      border-bottom: 1.5px solid #C8C3B4;
+      font-family: 'DM Sans', sans-serif; font-size: 0.875rem; color: #1A1A18;
+      cursor: pointer; user-select: none; white-space: nowrap;
+      transition: border-color 0.25s; background: transparent; border-radius: 0;
+    }
+    .cc-trigger:focus { outline: none; border-bottom-color: #1C3B2E; }
+    .cc-dropdown {
+      position: absolute; top: calc(100% + 2px); left: 0;
+      width: 220px; background: #FDFAF4;
+      border: 1px solid #D8D3C4; z-index: 200;
+      max-height: 220px; overflow-y: auto;
+    }
+    .cc-search {
+      width: 100%; border: none; border-bottom: 1px solid #E8E3D8;
+      padding: 8px 10px; font-size: 0.8rem; background: #F5F0E8;
+      font-family: 'DM Sans', sans-serif; outline: none; color: #1A1A18;
+    }
+    .cc-option {
+      padding: 8px 12px; font-size: 0.82rem; cursor: pointer;
+      display: flex; align-items: center; gap: 8px; transition: background 0.1s;
+    }
+    .cc-option:hover    { background: #EDE8DC; }
+    .cc-option.selected { color: #1C3B2E; font-weight: 500; }
+
+    /* ── Submit button ── */
+    .btn-submit {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      background: #1C3B2E; color: #F5F0E8;
+      font-family: 'DM Sans', sans-serif; font-size: 0.8125rem;
+      letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500;
+      padding: 14px 36px; border: 1.5px solid #1C3B2E;
+      cursor: pointer; border-radius: 0; position: relative; overflow: hidden;
+      transition: border-color 0.3s;
+    }
+    .btn-submit::after {
+      content: ''; position: absolute; inset: 0; background: #B8965A;
+      transform: scaleX(0); transform-origin: left;
+      transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); z-index: 0;
+    }
+    .btn-submit:hover::after { transform: scaleX(1); }
+    .btn-submit:hover        { border-color: #B8965A; }
+    .btn-submit > *          { position: relative; z-index: 1; }
+    .btn-submit:disabled     { opacity: 0.6; cursor: not-allowed; }
+    .btn-submit:disabled::after { transform: scaleX(0) !important; }
+
+    .spinner {
+      width: 15px; height: 15px;
+      border: 2px solid rgba(245,240,232,0.35); border-top-color: #F5F0E8;
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .gold-line { width: 2px; height: 48px; background: linear-gradient(to bottom, transparent, #B8965A, transparent); }
+
+    .fade-up { opacity: 0; transform: translateY(14px); animation: fadeUp 0.5s ease forwards; }
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Modal ── */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(20,20,18,0.55);
+      backdrop-filter: blur(3px);
+      display: flex; align-items: center; justify-content: center; z-index: 1000;
+      animation: mFade 0.25s ease;
+    }
+    @keyframes mFade { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal-card {
+      background: #F5F0E8; padding: 52px 48px 44px; max-width: 460px; width: 90%;
+      position: relative; border-top: 3px solid #B8965A;
+      animation: slideUp 0.4s cubic-bezier(0.16,1,0.3,1);
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .modal-close-btn {
+      position: absolute; top: 14px; right: 14px;
+      width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: #6B6A64; background: none; border: none;
+      border-radius: 0; transition: color 0.2s;
+    }
+    .modal-close-btn:hover { color: #1A1A18; }
+
+    .check-circle {
+      width: 54px; height: 54px; border: 1.5px solid #1C3B2E; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 22px; animation: popIn 0.45s 0.1s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    @keyframes popIn {
+      from { transform: scale(0.4); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+    .check-path {
+      stroke-dasharray: 40; stroke-dashoffset: 40;
+      animation: drawCheck 0.4s 0.5s ease forwards;
+    }
+    @keyframes drawCheck { to { stroke-dashoffset: 0; } }
+
+    .rule { display: flex; align-items: center; gap: 12px; }
+    .rule::before, .rule::after { content: ''; flex: 1; height: 1px; background: #C8C3B4; }
+  </style>
+</head>
+
+<body class="min-h-screen flex items-center justify-center py-16 px-4">
+
+  <!--
+  ╔══════════════════════════════════════════════════════════════════╗
+  ║  N8N WEBHOOK SETUP                                              ║
+  ╠══════════════════════════════════════════════════════════════════╣
+  ║  STEP 1 — Paste your n8n HTTP Trigger Production URL below      ║
+  ║  STEP 2 — Set WEBHOOK_SECRET to any strong string you choose    ║
+  ║           Use the same string in your n8n Code node (see below) ║
+  ║                                                                  ║
+  ║  n8n WORKFLOW ORDER:                                             ║
+  ║  [HTTP Trigger] → [Code Node: verify sig] → [Wait 5min]         ║
+  ║               → [HTTP Request → VAPI]                           ║
+  ║                                                                  ║
+  ║  CODE NODE SCRIPT (paste into n8n Code node, JS mode):          ║
+  ║                                                                  ║
+  ║  const crypto = require('crypto');                               ║
+  ║  const SECRET = 'hLaw$9xQ#mP2vT7kRn4dYc!Zw6sA3bJ';            ║
+  ║  const body = JSON.stringify($input.first().json.body ?? {});   ║
+  ║  const received = ($input.first().json.headers                  ║
+  ║    ['x-webhook-sig'] ?? '');                                    ║
+  ║  const expected = crypto                                         ║
+  ║    .createHmac('sha256', SECRET)                                 ║
+  ║    .update(body).digest('hex');                                  ║
+  ║  if (received !== expected)                                      ║
+  ║    throw new Error('Unauthorized: invalid signature');           ║
+  ║  return $input.all();                                            ║
+  ║                                                                  ║
+  ║  YES — you need the Code node. It goes right after the          ║
+  ║  HTTP Trigger. Without it the secret does nothing.              ║
+  ╚══════════════════════════════════════════════════════════════════╝
+  -->
+
+  <div x-data="contactForm()" x-init="init()" class="w-full max-w-5xl">
+
+    <!-- Header -->
+    <div class="mb-10 fade-up" style="animation-delay:0.05s">
+      <p class="text-xs tracking-widest uppercase font-body mb-2" style="color:#B8965A">Adeyemi &amp; Partners — Barristers &amp; Solicitors</p>
+      <h1 class="font-display text-4xl md:text-5xl font-medium leading-tight" style="color:#1C3B2E">
+        Trusted Legal Counsel,<br/><em class="font-normal italic">Across Nigeria &amp; Beyond.</em>
+      </h1>
+    </div>
+
+    <!-- Card -->
+    <div class="border border-parchment" style="background:#F5F0E8; border-top: 3px solid #B8965A;">
+      <div class="grid md:grid-cols-5">
+
+        <!-- Sidebar -->
+        <aside class="md:col-span-2 p-10 border-r border-parchment flex flex-col justify-between">
+          <div>
+            <h2 class="font-display text-3xl font-medium leading-snug mb-4 fade-up" style="color:#1C3B2E;animation-delay:0.1s">
+              Send us a<br/>message
+            </h2>
+            <p class="text-sm leading-relaxed mb-8 fade-up" style="color:#6B6A64;animation-delay:0.15s">
+              Whether you are based in Lagos, Abuja, Port Harcourt, or anywhere in the world — we are here to help. All enquiries are handled with strict confidentiality.
+            </p>
+            <div class="gold-line mb-8 fade-up" style="animation-delay:0.2s"></div>
+            <div class="fade-up" style="animation-delay:0.25s">
+              <p class="text-xs tracking-widest uppercase mb-3" style="color:#B8965A">Office Hours (WAT)</p>
+              <p class="text-sm mb-1" style="color:#1A1A18">Monday – Friday &nbsp;·&nbsp; 08:00 – 18:00</p>
+              <p class="text-sm" style="color:#1A1A18">Saturday &nbsp;·&nbsp; 10:00 – 14:00</p>
+            </div>
+            <div class="mt-8 fade-up" style="animation-delay:0.3s">
+              <p class="text-xs tracking-widest uppercase mb-3" style="color:#B8965A">Contact</p>
+              <p class="text-sm mb-1" style="color:#1A1A18">+234 (0) 901 234 5678</p>
+              <p class="text-sm mb-1" style="color:#1A1A18">contact@adeyemipartners.ng</p>
+              <p class="text-sm" style="color:#6B6A64">Lagos · Abuja · Port Harcourt</p>
+            </div>
+          </div>
+          <div class="flex gap-4 mt-10 fade-up" style="animation-delay:0.35s">
+            <a href="#" style="color:#6B6A64" onmouseover="this.style.color='#1C3B2E'" onmouseout="this.style.color='#6B6A64'" aria-label="LinkedIn">
+              <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM.5 8.5H4.5V24H.5V8.5zM8.5 8.5h3.8v2.14h.05c.53-1 1.82-2.05 3.75-2.05 4 0 4.75 2.64 4.75 6.07V24h-4V15.4c0-2.05-.04-4.68-2.85-4.68-2.85 0-3.29 2.23-3.29 4.53V24h-4V8.5z"/></svg>
+            </a>
+            <a href="#" style="color:#6B6A64" onmouseover="this.style.color='#1C3B2E'" onmouseout="this.style.color='#6B6A64'" aria-label="X">
+              <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            </a>
+            <a href="#" style="color:#6B6A64" onmouseover="this.style.color='#1C3B2E'" onmouseout="this.style.color='#6B6A64'" aria-label="Instagram">
+              <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+            </a>
+          </div>
+        </aside>
+
+        <!-- Form -->
+        <div class="md:col-span-3 p-10">
+          <form @submit.prevent="submitForm()" novalidate autocomplete="on">
+
+            <!-- First + Last name -->
+            <div class="grid grid-cols-2 gap-6 mb-6 fade-up" style="animation-delay:0.15s">
+              <div>
+                <label class="field-label" for="firstName">First Name <span style="color:#B8965A">*</span></label>
+                <input id="firstName" name="firstName" type="text" autocomplete="given-name"
+                  class="field" :class="{'error': errors.firstName}"
+                  placeholder="e.g. Chukwuemeka"
+                  x-model="form.firstName" @blur="validate('firstName')"/>
+                <p x-show="errors.firstName" x-text="errors.firstName" class="err-msg" x-cloak></p>
+              </div>
+              <div>
+                <label class="field-label" for="lastName">Last Name <span style="color:#B8965A">*</span></label>
+                <input id="lastName" name="lastName" type="text" autocomplete="family-name"
+                  class="field" :class="{'error': errors.lastName}"
+                  placeholder="e.g. Adeyemi"
+                  x-model="form.lastName" @blur="validate('lastName')"/>
+                <p x-show="errors.lastName" x-text="errors.lastName" class="err-msg" x-cloak></p>
+              </div>
+            </div>
+
+            <!-- Email -->
+            <div class="mb-6 fade-up" style="animation-delay:0.2s">
+              <label class="field-label" for="email">Email Address <span style="color:#B8965A">*</span></label>
+              <input id="email" name="email" type="email" autocomplete="email"
+                class="field" :class="{'error': errors.email}"
+                placeholder="you@example.com"
+                x-model="form.email" @blur="validate('email')"/>
+              <p x-show="errors.email" x-text="errors.email" class="err-msg" x-cloak></p>
+            </div>
+
+            <!-- Phone — international country code picker -->
+            <div class="mb-6 fade-up" style="animation-delay:0.25s">
+              <label class="field-label" for="phone">Phone Number <span style="color:#B8965A">*</span></label>
+              <div class="flex items-end gap-2"
+                x-data="{
+                  ccOpen: false,
+                  ccSearch: '',
+                  selected: { flag:'🇳🇬', code:'+234', name:'Nigeria' },
+                  countries: [
+                    {flag:'🇳🇬', code:'+234', name:'Nigeria'},
+                    {flag:'🇬🇧', code:'+44',  name:'United Kingdom'},
+                    {flag:'🇺🇸', code:'+1',   name:'United States'},
+                    {flag:'🇨🇦', code:'+1',   name:'Canada'},
+                    {flag:'🇬🇭', code:'+233', name:'Ghana'},
+                    {flag:'🇿🇦', code:'+27',  name:'South Africa'},
+                    {flag:'🇰🇪', code:'+254', name:'Kenya'},
+                    {flag:'🇪🇹', code:'+251', name:'Ethiopia'},
+                    {flag:'🇹🇿', code:'+255', name:'Tanzania'},
+                    {flag:'🇺🇬', code:'+256', name:'Uganda'},
+                    {flag:'🇸🇳', code:'+221', name:'Senegal'},
+                    {flag:'🇨🇮', code:'+225', name:'Côte d\'Ivoire'},
+                    {flag:'🇩🇪', code:'+49',  name:'Germany'},
+                    {flag:'🇫🇷', code:'+33',  name:'France'},
+                    {flag:'🇦🇪', code:'+971', name:'UAE'},
+                    {flag:'🇸🇦', code:'+966', name:'Saudi Arabia'},
+                    {flag:'🇮🇳', code:'+91',  name:'India'},
+                    {flag:'🇨🇳', code:'+86',  name:'China'},
+                    {flag:'🇦🇺', code:'+61',  name:'Australia'},
+                    {flag:'🇳🇱', code:'+31',  name:'Netherlands'},
+                    {flag:'🇧🇷', code:'+55',  name:'Brazil'},
+                    {flag:'🇵🇹', code:'+351', name:'Portugal'},
+                    {flag:'🇮🇹', code:'+39',  name:'Italy'},
+                    {flag:'🇪🇸', code:'+34',  name:'Spain'},
+                  ],
+                  get filtered() {
+                    if (!this.ccSearch) return this.countries;
+                    return this.countries.filter(c =>
+                      c.name.toLowerCase().includes(this.ccSearch.toLowerCase()) ||
+                      c.code.includes(this.ccSearch)
+                    );
+                  }
+                }"
+                @click.outside="ccOpen = false"
+                style="position:relative; z-index: 60;"
+              >
+                <!-- Country code trigger -->
+                <div class="cc-wrap">
+                  <div class="cc-trigger" @click="ccOpen = !ccOpen" tabindex="0"
+                    @keydown.escape="ccOpen = false">
+                    <span x-text="selected.flag"></span>
+                    <span x-text="selected.code" style="font-size:0.8rem;color:#6B6A64"></span>
+                    <svg width="11" height="11" viewBox="0 0 11 11" fill="none"
+                      :style="ccOpen ? 'transform:rotate(180deg);transition:transform 0.2s' : 'transition:transform 0.2s'">
+                      <path d="M1 3.5L5.5 8L10 3.5" stroke="#6B6A64" stroke-width="1.4" stroke-linecap="round"/>
+                    </svg>
+                  </div>
+                  <div class="cc-dropdown" x-show="ccOpen" x-cloak>
+                    <input class="cc-search" type="text" placeholder="Search country…"
+                      x-model="ccSearch" @click.stop/>
+                    <template x-for="c in filtered" :key="c.name">
+                      <div class="cc-option"
+                        :class="{'selected': selected.name === c.name}"
+                        @click="selected = c; ccOpen = false; ccSearch = ''; form.countryCode = c.code">
+                        <span x-text="c.flag"></span>
+                        <span x-text="c.name" style="flex:1"></span>
+                        <span x-text="c.code" style="color:#6B6A64;font-size:0.78rem"></span>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+
+                <!-- Number input -->
+                <input id="phone" name="phone" type="tel" autocomplete="tel-national"
+                  class="field flex-1" :class="{'error': errors.phone}"
+                  placeholder="080X XXX XXXX"
+                  x-model="form.phone" @blur="validate('phone')"/>
+              </div>
+              <p x-show="errors.phone" x-text="errors.phone" class="err-msg" x-cloak></p>
+            </div>
+
+            <!-- Practice area -->
+            <!-- THE FIX: .field-group gets position:relative always.
+                 :class adds is-open when dropdown is open → raises z-index above fields below -->
+            <div class="field-group fade-up" style="animation-delay:0.28s"
+              x-data="{ open: false, options: ['Corporate & Commercial Law','Company Secretarial Services','Banking & Finance Law','Oil & Gas / Energy Law','Real Estate & Property Law','Family Law & Divorce','Criminal Defense','Employment & Labour Law','Immigration & Visa Matters','Intellectual Property','Debt Recovery & Litigation','Estate Planning & Probate','International Arbitration','Other / Not Listed'] }"
+              :class="{ 'is-open': open }"
+              @click.outside="open = false"
+            >
+              <label class="field-label">Practice Area <span style="color:#B8965A">*</span></label>
+              <div class="cs-anchor">
+                <div class="cs-trigger"
+                  :class="{'empty': !form.practiceArea, 'open': open, 'error': errors.practiceArea}"
+                  @click="open = !open" tabindex="0"
+                  @keydown.enter.prevent="open = !open"
+                  @keydown.escape="open = false">
+                  <span x-text="form.practiceArea || 'Select area of law…'"></span>
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none"
+                    :style="open ? 'transform:rotate(180deg);transition:transform 0.2s' : 'transition:transform 0.2s'">
+                    <path d="M2 4.5L6.5 9L11 4.5" stroke="#6B6A64" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <div class="cs-dropdown" x-show="open" x-cloak>
+                  <template x-for="opt in options" :key="opt">
+                    <div class="cs-option" :class="{'selected': form.practiceArea === opt}"
+                      @click="form.practiceArea = opt; open = false; validate('practiceArea')"
+                      x-text="opt"></div>
+                  </template>
+                </div>
+              </div>
+              <p x-show="errors.practiceArea" x-text="errors.practiceArea" class="err-msg" x-cloak></p>
+            </div>
+
+            <!-- Matter urgency -->
+            <div class="field-group fade-up" style="animation-delay:0.31s"
+              x-data="{ open: false, options: ['Immediate — within 24 hours','Urgent — within 3 days','Standard — within a week','Planning ahead — no rush'] }"
+              :class="{ 'is-open': open }"
+              @click.outside="open = false"
+            >
+              <label class="field-label">Matter Urgency <span style="color:#B8965A">*</span></label>
+              <div class="cs-anchor">
+                <div class="cs-trigger"
+                  :class="{'empty': !form.urgency, 'open': open, 'error': errors.urgency}"
+                  @click="open = !open" tabindex="0"
+                  @keydown.enter.prevent="open = !open"
+                  @keydown.escape="open = false">
+                  <span x-text="form.urgency || 'How urgent is your matter?'"></span>
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none"
+                    :style="open ? 'transform:rotate(180deg);transition:transform 0.2s' : 'transition:transform 0.2s'">
+                    <path d="M2 4.5L6.5 9L11 4.5" stroke="#6B6A64" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <div class="cs-dropdown" x-show="open" x-cloak>
+                  <template x-for="opt in options" :key="opt">
+                    <div class="cs-option" :class="{'selected': form.urgency === opt}"
+                      @click="form.urgency = opt; open = false; validate('urgency')"
+                      x-text="opt"></div>
+                  </template>
+                </div>
+              </div>
+              <p x-show="errors.urgency" x-text="errors.urgency" class="err-msg" x-cloak></p>
+            </div>
+
+            <!-- Case description -->
+            <div class="mb-6 fade-up" style="animation-delay:0.34s">
+              <label class="field-label" for="description">Describe Your Case <span style="color:#B8965A">*</span></label>
+              <textarea id="description" name="description" rows="4" autocomplete="off"
+                class="field" :class="{'error': errors.description}"
+                placeholder="Briefly describe the legal matter you need assistance with…"
+                x-model="form.description" @blur="validate('description')"></textarea>
+              <p x-show="errors.description" x-text="errors.description" class="err-msg" x-cloak></p>
+            </div>
+
+            <!-- Consent -->
+            <div class="mb-8 fade-up" style="animation-delay:0.37s">
+              <label class="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" x-model="form.consent"
+                  style="margin-top:3px;width:14px;height:14px;accent-color:#1C3B2E;flex-shrink:0"/>
+                <span class="text-xs leading-relaxed" style="color:#6B6A64">
+                  I consent to Adeyemi &amp; Partners contacting me regarding my enquiry, including a phone consultation within 5 minutes of submission. All information is handled with strict professional confidentiality.
+                </span>
+              </label>
+              <p x-show="errors.consent" x-text="errors.consent" class="err-msg" x-cloak></p>
+            </div>
+
+            <!-- Submit -->
+            <div class="fade-up" style="animation-delay:0.4s">
+              <button type="submit" class="btn-submit" :disabled="loading">
+                <div x-show="loading" class="spinner"></div>
+                <span x-text="loading ? 'Submitting…' : 'Submit Enquiry'"></span>
+                <svg x-show="!loading" width="16" height="16" fill="none" viewBox="0 0 16 16">
+                  <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <p x-show="submitError" x-text="submitError" class="err-msg mt-3" x-cloak></p>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-xs mt-6 text-center fade-up" style="color:#6B6A64;animation-delay:0.5s">
+      Adeyemi &amp; Partners is regulated by the Nigerian Bar Association. All communications are privileged and confidential.
+    </p>
+
+    <!-- SUCCESS MODAL — inside x-data so Alpine controls showModal -->
+    <div
+      x-show="showModal"
+      x-cloak
+      class="modal-backdrop"
+      @click.self="showModal = false"
+      @keydown.escape.window="showModal = false"
+    >
+      <div class="modal-card">
+        <button class="modal-close-btn" @click="showModal = false" aria-label="Close">
+          <svg width="18" height="18" fill="none" viewBox="0 0 18 18">
+            <path d="M3 3l12 12M15 3L3 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <div class="check-circle">
+          <svg width="26" height="26" fill="none" viewBox="0 0 26 26">
+            <path class="check-path" d="M5 13l6 6L21 7"
+              stroke="#1C3B2E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <p class="text-xs tracking-widest uppercase text-center mb-2" style="color:#B8965A">Enquiry Received</p>
+        <h3 class="font-display text-2xl text-center font-medium mb-4" style="color:#1C3B2E">
+          Thank you, <span x-text="savedFirstName"></span>.
+        </h3>
+        <p class="text-sm text-center leading-relaxed mb-6" style="color:#6B6A64">
+          Your message has been securely delivered. Our team will be in touch shortly — and if your matter is urgent, expect a call within <strong style="color:#1A1A18;font-weight:500">5 minutes</strong>.
+        </p>
+        <div class="rule text-xs tracking-widest uppercase" style="color:#6B6A64">Reference</div>
+        <p class="text-center text-xs mt-3 font-mono" style="color:#6B6A64" x-text="refId"></p>
+      </div>
+    </div>
+
+  </div><!-- end x-data -->
+
+  <script>
+
+    //FUNCTION NODE SCRIPT (paste into n8n Code node, JS mode):
+
+    // const crypto = require('crypto');
+
+    // const SECRET = 'hLaw$9xQ#mP2vT7kRn4dYc!Zw6sA3bJ'; // same as in your HTML
+
+    // const body = JSON.stringify($input.first().json.body ?? {});
+    // const received = ($input.first().json.headers['x-webhook-sig'] ?? '');
+
+    // const expected = crypto
+    //   .createHmac('sha256', SECRET)
+    //   .update(body)
+    //   .digest('hex');
+
+    // if (received !== expected) {
+    //   throw new Error('Unauthorized: invalid signature');
+    // }
+
+    // return $input.all();
+    //END OF FUNCTION NODE SCRIPT
+
+    // ─── REPLACE THESE TWO VALUES ───────────────────────────────────────────
+    const WEBHOOK_URL    = 'https://YOUR_N8N_INSTANCE/webhook/YOUR_PATH';
+    const WEBHOOK_SECRET = 'hLaw$9xQ#mP2vT7kRn4dYc!Zw6sA3bJ';
+    // ────────────────────────────────────────────────────────────────────────
+
+    async function signPayload(secret, body) {
+      const enc = new TextEncoder();
+      const key = await crypto.subtle.importKey('raw', enc.encode(secret),
+        { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+      const sig = await crypto.subtle.sign('HMAC', key, enc.encode(body));
+      return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2,'0')).join('');
+    }
+
+    function contactForm() {
+      return {
+        form: {
+          firstName:'', lastName:'', email:'',
+          countryCode:'+234', phone:'',
+          practiceArea:'', urgency:'', description:'', consent: false,
+        },
+        errors: {},
+        loading: false,
+        showModal: false,
+        submitError: '',
+        refId: '',
+        savedFirstName: '',
+
+        init() {},
+
+        rules: {
+          firstName:    v => v.trim().length >= 2 ? null : 'First name is required.',
+          lastName:     v => v.trim().length >= 2 ? null : 'Last name is required.',
+          email:        v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) ? null : 'A valid email address is required.',
+          phone:        v => v.replace(/\D/g,'').length >= 7 ? null : 'Please enter a valid phone number.',
+          practiceArea: v => v ? null : 'Please select a practice area.',
+          urgency:      v => v ? null : 'Please indicate the urgency of your matter.',
+          description:  v => v.trim().length >= 20 ? null : 'Please describe your case (at least 20 characters).',
+          consent:      v => v ? null : 'You must consent to being contacted to proceed.',
+        },
+
+        validate(field) {
+          const err = this.rules[field](this.form[field]);
+          if (err) this.errors[field] = err;
+          else     delete this.errors[field];
+          this.errors = { ...this.errors };
+        },
+
+        validateAll() {
+          Object.keys(this.rules).forEach(f => this.validate(f));
+          return Object.keys(this.errors).length === 0;
+        },
+
+        async submitForm() {
+          if (!this.validateAll()) return;
+
+          this.loading = true;
+          this.submitError = '';
+
+          const payload = {
+            firstName:    this.form.firstName,
+            lastName:     this.form.lastName,
+            email:        this.form.email,
+            phone:        this.form.countryCode + this.form.phone.replace(/\D/g,''),
+            countryCode:  this.form.countryCode,
+            practiceArea: this.form.practiceArea,
+            urgency:      this.form.urgency,
+            description:  this.form.description,
+            submittedAt:  new Date().toISOString(),
+          };
+          const body = JSON.stringify(payload);
+
+          try {
+            const signature = await signPayload(WEBHOOK_SECRET, body);
+            const res = await fetch(WEBHOOK_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'X-Webhook-Sig': signature },
+              body,
+            });
+            if (!res.ok) throw new Error(`n8n returned ${res.status}`);
+
+            this.savedFirstName = payload.firstName;
+            this.refId = 'AP-' + Date.now().toString(36).toUpperCase().slice(-6);
+            this.form = { firstName:'', lastName:'', email:'', countryCode:'+234', phone:'', practiceArea:'', urgency:'', description:'', consent: false };
+            this.errors = {};
+            this.showModal = true;
+
+          } catch(err) {
+            this.submitError = err.message.includes('Failed to fetch')
+              ? 'Cannot reach the server. Please check your connection and try again.'
+              : 'Submission failed — please try again or call us directly.';
+          } finally {
+            this.loading = false;
+          }
+        },
+      };
+    }
+  </script>
+</body>
+</html>
