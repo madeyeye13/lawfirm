@@ -548,40 +548,20 @@
   </div><!-- end x-data -->
 
   <script>
-
-    //FUNCTION NODE SCRIPT (paste into n8n Code node, JS mode):
-
-    // const crypto = require('crypto');
-
-    // const SECRET = 'hLaw$9xQ#mP2vT7kRn4dYc!Zw6sA3bJ'; // same as in your HTML
-
-    // const body = JSON.stringify($input.first().json.body ?? {});
-    // const received = ($input.first().json.headers['x-webhook-sig'] ?? '');
-
-    // const expected = crypto
-    //   .createHmac('sha256', SECRET)
-    //   .update(body)
-    //   .digest('hex');
-
-    // if (received !== expected) {
-    //   throw new Error('Unauthorized: invalid signature');
-    // }
-
-    // return $input.all();
-    //END OF FUNCTION NODE SCRIPT
-
-    // ─── REPLACE THESE TWO VALUES ───────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────
+    // YOUR WEBHOOK SETTINGS
+    //
+    // WEBHOOK_URL    → your n8n HTTP Trigger Production URL
+    // WEBHOOK_SECRET → the same string you set in n8n Header Auth:
+    //   HTTP Trigger node → Authentication → Header Auth
+    //   Header Name:  X-Api-Key
+    //   Header Value: hLaw$9xQ#mP2vT7kRn4dYc!Zw6sA3bJ
+    //
+    // NO Code node needed. n8n rejects requests with wrong/missing header.
+    // Workflow order: [HTTP Trigger] → [Wait 5 min] → [HTTP Request to VAPI]
+    // ─────────────────────────────────────────────────────────────────────
     const WEBHOOK_URL    = 'https://n8n.bezalelkoncept.site/webhook/law-form';
     const WEBHOOK_SECRET = 'hLaw$9xQ#mP2vT7kRn4dYc!Zw6sA3bJ';
-    // ────────────────────────────────────────────────────────────────────────
-
-    async function signPayload(secret, body) {
-      const enc = new TextEncoder();
-      const key = await crypto.subtle.importKey('raw', enc.encode(secret),
-        { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-      const sig = await crypto.subtle.sign('HMAC', key, enc.encode(body));
-      return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2,'0')).join('');
-    }
 
     function contactForm() {
       return {
@@ -639,15 +619,17 @@
             description:  this.form.description,
             submittedAt:  new Date().toISOString(),
           };
-          const body = JSON.stringify(payload);
 
           try {
-            const signature = await signPayload(WEBHOOK_SECRET, body);
             const res = await fetch(WEBHOOK_URL, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'X-Webhook-Sig': signature },
-              body,
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Api-Key': WEBHOOK_SECRET,
+              },
+              body: JSON.stringify(payload),
             });
+
             if (!res.ok) throw new Error(`n8n returned ${res.status}`);
 
             this.savedFirstName = payload.firstName;
